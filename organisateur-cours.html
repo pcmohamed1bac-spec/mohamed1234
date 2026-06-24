@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="fr" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Organisateur de Cours</title>
+
+  <!-- ═══════════════════════════════════════════════
+       FAVICON — compatible Chrome / Edge / Firefox / Safari
+  ════════════════════════════════════════════════ -->
+  <!-- ICO classique (tous navigateurs) -->
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <!-- PNG 192 (Android / moderne) -->
+  <link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
+  <!-- PNG 512 (haute résolution) -->
+  <link rel="icon" href="icon-512.png" type="image/png" sizes="512x512">
+  <!-- Apple Touch Icon (iOS / Safari) -->
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <!-- ═══════════════════════════════════════════════
+       PWA — Web App Manifest
+  ════════════════════════════════════════════════ -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- ═══════════════════════════════════════════════
+       PWA — Meta tags (Chrome, Edge, iOS Safari)
+  ════════════════════════════════════════════════ -->
+  <!-- Couleur de la barre de titre / thème -->
+  <meta name="theme-color" content="#059669">
+  <!-- Nom affiché lors de l'installation -->
+  <meta name="application-name" content="Organisateur de Cours">
+  <!-- Mode plein écran sur iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Organisateur">
+  <!-- Description (SEO + install prompt) -->
+  <meta name="description" content="Organisez vos fichiers et liens par matière scolaire.">
+  <!-- Microsoft Tiles (Edge / Windows) -->
+  <meta name="msapplication-TileImage" content="icon-192.png">
+  <meta name="msapplication-TileColor" content="#059669">
+
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <style>
+    body { font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
+    .card-hover { transition: transform 0.4s cubic-bezier(.4,0,.2,1), box-shadow 0.4s, border-color 0.3s; }
+    .card-hover:hover { transform: translateY(-10px) scale(1.04); box-shadow: 0 24px 48px rgba(0,0,0,0.12); border-color: rgba(16,185,129,0.4); }
+    .card-hover:active { transform: translateY(-2px) scale(1.01); }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(30px) scale(0.92); } to { opacity:1; transform:translateY(0) scale(1); } }
+    .anim-card { animation: fadeUp 0.6s cubic-bezier(.4,0,.2,1) both; }
+    @keyframes slideIn { from { opacity:0; transform:translateX(-20px); } to { opacity:1; transform:translateX(0); } }
+    .anim-slide { animation: slideIn 0.4s ease both; }
+    @keyframes pulseGlow { 0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); } 50% { box-shadow: 0 0 24px 6px rgba(16,185,129,0.15); } }
+    .glow-pulse { animation: pulseGlow 2.5s ease-in-out infinite; }
+    @keyframes viewEnter { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:translateX(0); } }
+    .view-slide-enter { animation: viewEnter 0.4s cubic-bezier(.4,0,.2,1) both; }
+    @keyframes viewBack { from { opacity:0; transform:translateX(-40px); } to { opacity:1; transform:translateX(0); } }
+    .view-slide-back { animation: viewBack 0.35s ease both; }
+    .glass { background: rgba(255,255,255,0.65); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.5); }
+    .glass-card { background: rgba(255,255,255,0.8); backdrop-filter: blur(8px); border: 1.5px solid rgba(255,255,255,0.6); }
+    .badge { display:inline-flex; align-items:center; gap:4px; padding:4px 12px; border-radius:9999px; font-size:11px; font-weight:600; letter-spacing:0.3px; }
+    @keyframes float { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-12px) rotate(3deg); } }
+    .float-anim { animation: float 4s ease-in-out infinite; }
+    @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+    .shimmer-text { background: linear-gradient(90deg, #1e293b 30%, #059669 50%, #1e293b 70%); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: shimmer 4s linear infinite; }
+    .link-item { transition: all 0.3s cubic-bezier(.4,0,.2,1); }
+    .link-item:hover { transform: translateX(4px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+    @keyframes particle { 0% { transform: translateY(0) scale(1); opacity:0.6; } 100% { transform: translateY(-100vh) scale(0); opacity:0; } }
+    .particle { position: absolute; border-radius: 50%; pointer-events: none; animation: particle linear forwards; }
+    .subject-count { position:absolute; top:8px; right:8px; min-width:22px; height:22px; display:flex; align-items:center; justify-content:center; border-radius:9999px; font-size:11px; font-weight:700; }
+  </style>
+</head>
+<body class="min-h-screen w-full relative" style="background: linear-gradient(135deg, rgb(240, 253, 244), rgb(236, 254, 255), rgb(245, 243, 255));">
+
+  <!-- Particles container -->
+  <div id="particles" class="fixed inset-0 pointer-events-none z-0 overflow-hidden"></div>
+
+  <!-- MAIN VIEW -->
+  <div id="main-view" class="relative z-10">
+    <header class="relative overflow-hidden">
+      <img class="absolute inset-0 w-full h-full object-cover opacity-15" loading="lazy"
+        src="https://images.pexels.com/photos/6193092/pexels-photo-6193092.jpeg?auto=compress&cs=tinysrgb&w=1280"
+        alt="Office supplies flat lay">
+      <div class="absolute inset-0 bg-gradient-to-b from-transparent to-white/60"></div>
+      <div class="relative z-10 py-20 px-6 text-center">
+        <h1 class="font-bold shimmer-text" style="font-family:'Playfair Display',serif; font-size:36px;">Organisateur de Cours</h1>
+        <p class="mt-4" style="color:rgb(71,85,105); font-size:18px;">Organisez vos fichiers et liens par matière ✨</p>
+      </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-6 py-10">
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-5 mb-5">
+        <button class="card-hover anim-card glass-card rounded-2xl p-6 text-center relative border" style="animation-delay:0ms" onclick="openSubject('sciences','🔬')">
+          <div class="text-4xl mb-3 float-anim">🔬</div>
+          <p class="font-medium" style="color:rgb(30,41,59); font-size:16px;">Sciences</p>
+          <span class="subject-count bg-emerald-100 text-emerald-700" id="count-sciences">0</span>
+        </button>
+        <button class="card-hover anim-card glass-card rounded-2xl p-6 text-center relative border" style="animation-delay:70ms" onclick="openSubject('maths','📐')">
+          <div class="text-4xl mb-3 float-anim" style="animation-delay:0.5s">📐</div>
+          <p class="font-medium" style="color:rgb(30,41,59); font-size:16px;">Mathématiques</p>
+          <span class="subject-count bg-blue-100 text-blue-700" id="count-maths">0</span>
+        </button>
+        <button class="card-hover anim-card glass-card rounded-2xl p-6 text-center relative border" style="animation-delay:140ms" onclick="openSubject('physique','⚛️')">
+          <div class="text-4xl mb-3 float-anim" style="animation-delay:1s">⚛️</div>
+          <p class="font-medium" style="color:rgb(30,41,59); font-size:16px;">Physique</p>
+          <span class="subject-count bg-purple-100 text-purple-700" id="count-physique">0</span>
+        </button>
+        <button class="card-hover anim-card glass-card rounded-2xl p-6 text-center relative border" style="animation-delay:210ms" onclick="openSubject('anglais','🔤')">
+          <div class="text-4xl mb-3 float-anim" style="animation-delay:1.5s">🔤</div>
+          <p class="font-medium" style="color:rgb(30,41,59); font-size:16px;">Anglais</p>
+          <span class="subject-count bg-orange-100 text-orange-700" id="count-anglais">0</span>
+        </button>
+        <button class="card-hover anim-card glass-card rounded-2xl p-6 text-center relative border" style="animation-delay:280ms" onclick="openSubject('philo','🧠')">
+          <div class="text-4xl mb-3 float-anim" style="animation-delay:2s">🧠</div>
+          <p class="font-medium" style="color:rgb(30,41,59); font-size:16px;">Philosophie</p>
+          <span class="subject-count bg-pink-100 text-pink-700" id="count-philo">0</span>
+        </button>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-5">
+        <button class="card-hover anim-card glass-card rounded-2xl p-6 text-center relative border" style="animation-delay:350ms" onclick="openSubject('francais','🇫🇷')">
+          <div class="text-4xl mb-3 float-anim" style="animation-delay:2.5s">🇫🇷</div>
+          <p class="font-medium" style="color:rgb(30,41,59); font-size:16px;">Français</p>
+          <span class="subject-count bg-red-100 text-red-700" id="count-francais">0</span>
+        </button>
+        <button class="card-hover anim-card glass-card rounded-2xl p-6 text-center relative border" style="animation-delay:420ms" onclick="openSubject('arabe','🪶')">
+          <div class="text-4xl mb-3 float-anim" style="animation-delay:3s">🪶</div>
+          <p class="font-medium" style="color:rgb(30,41,59); font-size:16px;">Arabe</p>
+          <span class="subject-count bg-amber-100 text-amber-700" id="count-arabe">0</span>
+        </button>
+        <button class="card-hover anim-card glass-card rounded-2xl p-6 text-center relative border" style="animation-delay:490ms" onclick="openSubject('islamique','🕌')">
+          <div class="text-4xl mb-3 float-anim" style="animation-delay:3.5s">🕌</div>
+          <p class="font-medium" style="color:rgb(30,41,59); font-size:16px;">Éducation Islamique</p>
+          <span class="subject-count bg-teal-100 text-teal-700" id="count-islamique">0</span>
+        </button>
+        <button class="card-hover anim-card glass-card rounded-2xl p-6 text-center relative border" style="animation-delay:560ms" onclick="openSubject('sport','⚽')">
+          <div class="text-4xl mb-3 float-anim" style="animation-delay:4s">⚽</div>
+          <p class="font-medium" style="color:rgb(30,41,59); font-size:16px;">Sport</p>
+          <span class="subject-count bg-lime-100 text-lime-700" id="count-sport">0</span>
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <!-- DETAIL VIEW -->
+  <div id="detail-view" class="hidden relative z-10">
+    <div class="max-w-3xl mx-auto px-6 py-8">
+      <div class="flex items-center justify-between mb-6">
+        <button onclick="goBack()" class="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors group">
+          <i data-lucide="arrow-left" style="width:20px;height:20px" class="transition-transform group-hover:-translate-x-1"></i>
+          <span style="color:rgb(71,85,105); font-weight:500; font-size:16px;">Retour</span>
+        </button>
+        <button onclick="toggleAddForm()" class="flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-4 py-2 rounded-xl font-medium transition-all hover:scale-105">
+          <i data-lucide="plus-circle" style="width:20px;height:20px"></i>
+          <span class="text-sm">Ajouter</span>
+        </button>
+      </div>
+
+      <div class="flex items-center gap-4 mb-8">
+        <span id="detail-emoji" class="text-5xl float-anim"></span>
+        <h2 id="detail-subject-name" class="text-2xl font-bold text-slate-800"></h2>
+      </div>
+
+      <form id="add-form" class="hidden mb-8 glass rounded-2xl p-6 space-y-4 anim-slide shadow-lg">
+        <div class="flex flex-col gap-3">
+          <input id="input-title" type="text" placeholder="Titre du lien (optionnel)"
+            class="px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent bg-white/90 transition-shadow">
+          <div class="flex flex-col sm:flex-row gap-3">
+            <input id="input-url" type="url" placeholder="https://..."
+              class="flex-1 px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent bg-white/90 transition-shadow">
+            <div class="relative flex-1">
+              <input id="input-file" type="file" class="hidden"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.jpg,.jpeg,.png,.mp4,.mov,.avi,.webm">
+              <button type="button" id="file-upload-btn"
+                class="w-full px-4 py-3 border-2 border-dashed border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl font-medium transition-all hover:border-emerald-500 flex items-center justify-center gap-2">
+                <i data-lucide="upload-cloud" style="width:18px;height:18px"></i>
+                <span id="file-name-display">Choisir fichier</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-5">
+          <fieldset class="flex items-center gap-3">
+            <legend class="sr-only">Type</legend>
+            <label class="flex items-center gap-1.5 cursor-pointer text-sm hover:text-emerald-700 transition-colors">
+              <input type="radio" name="link-type" value="file" checked class="accent-emerald-600"><span>📄 Fichier</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer text-sm hover:text-emerald-700 transition-colors">
+              <input type="radio" name="link-type" value="video" class="accent-emerald-600"><span>🎬 Vidéo</span>
+            </label>
+          </fieldset>
+          <fieldset class="flex items-center gap-3">
+            <legend class="sr-only">Catégorie</legend>
+            <label class="flex items-center gap-1.5 cursor-pointer text-sm hover:text-emerald-700 transition-colors">
+              <input type="radio" name="link-cat" value="cours" checked class="accent-emerald-600"><span>📚 Cours</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer text-sm hover:text-emerald-700 transition-colors">
+              <input type="radio" name="link-cat" value="exercices" class="accent-emerald-600"><span>✏️ Exercices</span>
+            </label>
+          </fieldset>
+          <button type="submit"
+            class="ml-auto px-6 py-3 rounded-xl font-semibold flex items-center gap-2 glow-pulse transition-transform hover:scale-105 shadow-md"
+            style="background:rgb(5,150,105); color:white; font-size:16px;">
+            Ajouter ✓
+          </button>
+        </div>
+      </form>
+
+      <div id="links-list" class="space-y-3"></div>
+      <p id="empty-msg" class="text-center py-10 hidden" style="color:rgb(148,163,184); font-style:italic; font-size:16px;">
+        Aucun lien pour le moment. Cliquez sur « Ajouter » pour commencer ! 📎
+      </p>
+      <p id="limit-msg" class="text-red-600 font-medium text-center py-4 hidden bg-red-50 rounded-xl">
+        ⚠️ Limite de 999 éléments atteinte.
+      </p>
+    </div>
+  </div>
+
+  <template id="link-template">
+    <div class="link-item anim-slide flex items-center justify-between glass-card rounded-xl p-4 border">
+      <a class="link-anchor flex items-center gap-3 text-slate-800 hover:text-emerald-700 font-medium truncate transition-colors flex-1" target="_blank" rel="noopener noreferrer">
+        <span class="link-type-icon text-xl flex-shrink-0"></span>
+        <span class="link-title truncate"></span>
+        <span class="link-badge badge"></span>
+      </a>
+      <button class="delete-btn text-slate-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all hover:scale-110 flex-shrink-0" aria-label="Supprimer">
+        <i data-lucide="trash-2" style="width:16px;height:16px"></i>
+      </button>
+    </div>
+  </template>
+
+  <script>
+    // ─── localStorage helpers ───────────────────────────────────────────────
+    const STORAGE_KEY = 'organisateur_cours_data';
+
+    function loadData() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+      catch { return []; }
+    }
+
+    function saveData(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    // ─── State ──────────────────────────────────────────────────────────────
+    const subjectNames = {
+      maths:'Mathématiques', physique:'Physique', anglais:'Anglais',
+      philo:'Philosophie', sciences:'Sciences', francais:'Français',
+      arabe:'Arabe', islamique:'Éducation Islamique', sport:'Sport'
+    };
+
+    let allData = loadData();
+    let currentSubject = null;
+    let selectedFile = null;
+
+    // ─── Particles ──────────────────────────────────────────────────────────
+    function createParticles() {
+      const container = document.getElementById('particles');
+      const colors = ['#10b981','#06b6d4','#8b5cf6','#f59e0b','#ec4899'];
+      for (let i = 0; i < 15; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = Math.random() * 6 + 3;
+        p.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;bottom:-20px;background:${colors[i%colors.length]};animation-duration:${Math.random()*8+6}s;animation-delay:${Math.random()*5}s;opacity:${Math.random()*0.4+0.1};`;
+        container.appendChild(p);
+      }
+    }
+    createParticles();
+
+    // ─── Counts ─────────────────────────────────────────────────────────────
+    function updateCounts() {
+      Object.keys(subjectNames).forEach(key => {
+        const el = document.getElementById('count-' + key);
+        if (el) el.textContent = allData.filter(d => d.subject === key).length;
+      });
+    }
+    updateCounts();
+
+    // ─── Navigation ─────────────────────────────────────────────────────────
+    function openSubject(key, emoji) {
+      currentSubject = key;
+      document.getElementById('main-view').classList.add('hidden');
+      const dv = document.getElementById('detail-view');
+      dv.classList.remove('hidden', 'view-slide-back');
+      dv.classList.add('view-slide-enter');
+      document.getElementById('detail-emoji').textContent = emoji;
+      document.getElementById('detail-subject-name').textContent = subjectNames[key];
+      document.getElementById('add-form').classList.add('hidden');
+      renderLinks();
+      lucide.createIcons();
+    }
+
+    function goBack() {
+      currentSubject = null;
+      document.getElementById('detail-view').classList.add('hidden');
+      document.getElementById('detail-view').classList.remove('view-slide-enter');
+      const mv = document.getElementById('main-view');
+      mv.classList.remove('hidden');
+      mv.classList.add('view-slide-back');
+      setTimeout(() => mv.classList.remove('view-slide-back'), 400);
+    }
+
+    function toggleAddForm() {
+      const form = document.getElementById('add-form');
+      form.classList.toggle('hidden');
+      if (!form.classList.contains('hidden')) document.getElementById('input-title').focus();
+    }
+
+    // ─── Render ─────────────────────────────────────────────────────────────
+    function renderLinks() {
+      const filtered = allData.filter(d => d.subject === currentSubject);
+      const container = document.getElementById('links-list');
+      const emptyEl = document.getElementById('empty-msg');
+
+      container.innerHTML = '';
+
+      if (filtered.length === 0) {
+        emptyEl.classList.remove('hidden');
+        return;
+      }
+      emptyEl.classList.add('hidden');
+
+      const sorted = [...filtered].sort((a, b) => {
+        if (a.category !== b.category) return a.category === 'cours' ? -1 : 1;
+        return (b.created_at || '').localeCompare(a.created_at || '');
+      });
+
+      sorted.forEach((record, i) => {
+        const tpl = document.getElementById('link-template');
+        const node = tpl.content.cloneNode(true);
+        const wrapper = node.firstElementChild;
+        wrapper.dataset.id = record.id;
+        wrapper.style.animationDelay = (i * 60) + 'ms';
+
+        const anchor = wrapper.querySelector('.link-anchor');
+        anchor.href = record.url;
+        wrapper.querySelector('.link-title').textContent = record.title || '';
+        wrapper.querySelector('.link-type-icon').textContent = record.type === 'video' ? '🎬' : '📄';
+
+        const badge = wrapper.querySelector('.link-badge');
+        badge.textContent = record.category === 'cours' ? 'Cours' : 'Exercices';
+        badge.className = `link-badge badge ${record.category === 'cours' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`;
+
+        wrapper.querySelector('.delete-btn').addEventListener('click', () => deleteLink(record.id, wrapper));
+        container.appendChild(wrapper);
+      });
+
+      lucide.createIcons();
+    }
+
+    // ─── File upload ────────────────────────────────────────────────────────
+    document.getElementById('file-upload-btn').addEventListener('click', () => {
+      document.getElementById('input-file').click();
+    });
+
+    document.getElementById('input-file').addEventListener('change', (e) => {
+      selectedFile = e.target.files[0] || null;
+      const display = document.getElementById('file-name-display');
+      if (selectedFile) {
+        display.textContent = selectedFile.name;
+        const btn = document.getElementById('file-upload-btn');
+        btn.style.borderColor = '#10b981';
+        btn.style.backgroundColor = '#ecfdf5';
+      }
+    });
+
+    // ─── Add ────────────────────────────────────────────────────────────────
+    document.getElementById('add-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if (allData.length >= 999) {
+        document.getElementById('limit-msg').classList.remove('hidden');
+        return;
+      }
+
+      const title = document.getElementById('input-title').value.trim();
+      let url = document.getElementById('input-url').value.trim();
+
+      // If a file was selected, create a blob URL
+      if (selectedFile && !url) {
+        url = URL.createObjectURL(selectedFile);
+      }
+
+      if (!url) return;
+
+      const type = document.querySelector('input[name="link-type"]:checked').value;
+      const category = document.querySelector('input[name="link-cat"]:checked').value;
+
+      const btn = e.target.querySelector('[type="submit"]');
+      btn.disabled = true; btn.style.opacity = '0.5';
+
+      const newRecord = {
+        id: Date.now().toString(),
+        subject: currentSubject,
+        title, url, type, category,
+        created_at: new Date().toISOString()
+      };
+
+      allData.push(newRecord);
+      saveData(allData);
+      updateCounts();
+      renderLinks();
+
+      // Reset form
+      document.getElementById('input-title').value = '';
+      document.getElementById('input-url').value = '';
+      selectedFile = null;
+      document.getElementById('input-file').value = '';
+      document.getElementById('file-name-display').textContent = 'Choisir fichier';
+      const uploadBtn = document.getElementById('file-upload-btn');
+      uploadBtn.style.borderColor = '';
+      uploadBtn.style.backgroundColor = '';
+
+      btn.disabled = false; btn.style.opacity = '1';
+    });
+
+    // ─── Delete ─────────────────────────────────────────────────────────────
+    function deleteLink(id, el) {
+      if (el) {
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(30px) scale(0.95)';
+        el.style.transition = 'all 0.3s ease';
+      }
+      setTimeout(() => {
+        allData = allData.filter(d => d.id !== id);
+        saveData(allData);
+        updateCounts();
+        renderLinks();
+      }, 300);
+    }
+
+    lucide.createIcons();
+
+    // ─── Service Worker (PWA) ────────────────────────────────────────────────
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('[PWA] Service Worker enregistré :', reg.scope))
+          .catch(err => console.warn('[PWA] Échec SW :', err));
+      });
+    }
+  </script>
+</body>
+</html>
